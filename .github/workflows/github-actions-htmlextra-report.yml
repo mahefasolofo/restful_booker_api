@@ -1,0 +1,39 @@
+# Ce flux de travail vous aidera à produire un rapport de résultats de tests supplémentaires en HTML.
+
+name: Newman Tests
+on: [push, pull_request]
+
+jobs:
+  test-api:
+    runs-on: ubuntu-latest
+    steps:
+    # Vérifie votre dépôt sous $GITHUB_WORKSPACE, afin que votre travail puisse y accéder.
+      - uses: actions/checkout@v2
+      
+   # Installation de Node sur le runner
+      - name: Install Node
+        uses: actions/setup-node@v2
+        with: 
+          node-version: '16.x'
+
+    
+    # Installation de l'utilitaire de ligne de commande newman et installation du reporter html extra.
+      - name: Install newman
+        run: |
+          npm install -g newman
+          npm install -g newman-reporter-htmlextra
+          
+    # Créer un répertoire pour télécharger les résultats des tests
+      - name: Make Directory for results
+        run: mkdir -p testResults
+        
+   # Lancer la collection POSTMAN
+      - name: Run API Tests
+        run: newman run "Restful Booker BVT.postman_collection.json" -e Production.postman_environment.json -r htmlextra --reporter-htmlextra-export testResults/htmlreport.html
+
+    # Télécharger le contenu du répertoire Test Results dans l'espace de travail
+      - name: Output the run Details
+        uses: actions/upload-artifact@v2
+        with: 
+          name: RunReports
+          path: testResults
